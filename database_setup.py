@@ -1,7 +1,7 @@
 import sys
 from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, sessionmaker
 from sqlalchemy import create_engine
 Base = declarative_base()
 
@@ -22,5 +22,42 @@ class MenuItem(Base):
     restaurant = relationship(Restaurant)
 
 
-engine = create_engine('eqlite:///restaurantmenu.db')
+engine = create_engine('sqlite:///restaurantmenu.db')
 Base.metadata.create_all(engine)
+Base.metadata.bind = engine
+DBSession = sessionmaker(bind = engine)
+session = DBSession()
+# print(session.query(Restaurant).all())
+# items = session.query(MenuItem).all()
+# for item in items:
+#     print(item.name)
+
+
+UrbanVeggieBurger = session.query(MenuItem).filter_by(id = 2).one()
+# UrbanVeggieBurger2 = session.query(MenuItem).filter_by(restaurant_id = 8).one()
+#
+# print(UrbanVeggieBurger.price)
+# print(UrbanVeggieBurger2.price)
+UrbanVeggieBurger.price = "$2.99"
+session.add(UrbanVeggieBurger)
+session.commit()
+
+veggieBurgers = session.query(MenuItem).filter_by(name= "Veggie Burger")
+
+for veggieBurger in veggieBurgers:
+    if veggieBurger.price != '$2.99':
+        veggieBurger.price = '$2.99'
+        session.add(veggieBurger)
+        session.commit
+
+# for veggieBurger in veggieBurgers:
+#     print(veggieBurger.id)
+#     print(veggieBurger.price)
+#     print(veggieBurger.restaurant.name)
+#     print("\n")
+
+spinach = session.query(MenuItem).filter_by(name = 'Spinach Ice Cream').one()
+session.delete(spinach)
+session.commit()
+spinach = session.query(MenuItem).filter_by(name = 'Spinach Ice Cream').one()
+# print spinach.restaurant.name

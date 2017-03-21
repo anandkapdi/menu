@@ -46,6 +46,8 @@ class webServerHandler(BaseHTTPRequestHandler):
                 restaurants = session.query(Restaurant.name)
                 for restaurant in restaurants:
                     output += "<h1>%s</h1>"  % restaurant
+                    output += "<a href= '/restaurants'> Edit</a><br>"
+                    output += "<a href= '/restaurants'> Delete</a>"
                 output += "</body></html>"
                 self.wfile.write(output)
                 print output

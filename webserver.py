@@ -1,5 +1,24 @@
-from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 import cgi
+import sys
+
+from BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import relationship, sessionmaker
+from sqlalchemy import create_engine
+
+Base = declarative_base()
+
+class Restaurant(Base):
+    __tablename__ = 'restaurant'
+    name = Column(String(80), nullable = False)
+    id = Column(Integer, primary_key = True)
+
+engine = create_engine('sqlite:///restaurantmenu.db')
+Base.metadata.create_all(engine)
+Base.metadata.bind = engine
+DBSession = sessionmaker(bind = engine)
+session = DBSession()
 
 class webServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
@@ -13,6 +32,20 @@ class webServerHandler(BaseHTTPRequestHandler):
                 output += "<html><body>"
                 output += "<h1>Hello</h1>"
                 output += "<form method='POST' enctype='multipart/form-data' action='/hello'><h2>What would you like me to say?</h2><input name='message' type='text'> <input type='Submit' value='Submit'> </form> "
+                output += "</body></html>"
+                self.wfile.write(output)
+                print output
+                return
+
+            if self.path.endswith("/restaurants"):
+                self.send_response(200)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                output = ""
+                output += "<html><body>"
+                restaurants = session.query(Restaurant.name)
+                for restaurant in restaurants:
+                    output += "<h1>%s</h1>"  % restaurant
                 output += "</body></html>"
                 self.wfile.write(output)
                 print output

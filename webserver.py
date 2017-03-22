@@ -23,20 +23,6 @@ session = DBSession()
 class webServerHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         try:
-            if self.path.endswith("/hello"):
-                self.send_response(200)
-                self.send_header('Content-type', 'text/html')
-                self.end_headers()
-
-                output = ""
-                output += "<html><body>"
-                output += "<h1>Hello</h1>"
-                output += "<form method='POST' enctype='multipart/form-data' action='/hello'><h2>What would you like me to say?</h2><input name='message' type='text'> <input type='Submit' value='Submit'> </form> "
-                output += "</body></html>"
-                self.wfile.write(output)
-                print output
-                return
-
             if self.path.endswith("/restaurants"):
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
@@ -45,26 +31,28 @@ class webServerHandler(BaseHTTPRequestHandler):
                 output += "<html><body>"
                 restaurants = session.query(Restaurant.name)
                 for restaurant in restaurants:
-                    output += "<h1>%s</h1>"  % restaurant
+                    output += "<h2>%s</h2>"  % restaurant
                     output += "<a href= '/restaurants'> Edit</a><br>"
                     output += "<a href= '/restaurants'> Delete</a>"
+                output += "<br><br><a href= '/restaurants/new'> Make a New Restaurant Here</a>"
                 output += "</body></html>"
                 self.wfile.write(output)
                 print output
                 return
 
-            if self.path.endswith("/hola"):
+
+            if self.path.endswith("/restaurants/new"):
                 self.send_response(200)
                 self.send_header('Content-type', 'text/html')
                 self.end_headers()
                 output = ""
                 output += "<html><body>"
-                output +=    "&#161Hola <a href= '/hello'> Back to hello</a>"
-                output += "<form method='POST' enctype='multipart/form-data' action='/hello'><h2>What would you like me to say?</h2><input name='message' type='text'> <input type='Submit' value='Submit'> </form> "
+                output += "<form method='POST' enctype='multipart/form-data' action='/restaurants'><h2>Make a New Restaurant</h2><input name='restaurant' type='text'> <input type='Submit' value='Submit'> </form> "
                 output += "</body> </html>"
                 self.wfile.write(output)
                 print output
                 return
+
         except IOError:
             self.send_error(404, 'File NOt Found %s' % self.path)
 
@@ -76,15 +64,19 @@ class webServerHandler(BaseHTTPRequestHandler):
             ctype, pdict = cgi.parse_header(self.headers.getheader('content-type'))
             if ctype == 'multipart/form-data':
                 fields = cgi.parse_multipart(self.rfile, pdict)
-                messagecontent = fields.get('message')
-
+                newRestaurant = fields.get('restaurant')
+                createNewRestaurant = Restaurant(name=str(newRestaurant[0]))
+                session.add(createNewRestaurant)
+                session.commit
                 output = ""
                 output += "<html><body>"
-                output += "<h2> Okay, how about this: </h2>"
-                output += "<h1> %s </h1>" % messagecontent[0]
-
-                output += "<form method='POST' enctype='multipart/form-data' action='/hello'><h2>What would you like me to say?</h2><input name='message' type='text'> <input type='Submit' value='Submit'> </form> "
-                output += "</body> </html>"
+                restaurants = session.query(Restaurant.name)
+                for restaurant in restaurants:
+                    output += "<h2>%s</h2>"  % restaurant
+                    output += "<a href= '/restaurants'> Edit</a><br>"
+                    output += "<a href= '/restaurants'> Delete</a>"
+                output += "<br><br><a href= '/restaurants/new'> Make a New Restaurant Here</a>"
+                output += "</body></html>"
                 self.wfile.write(output)
                 print output
         except :
